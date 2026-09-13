@@ -1,0 +1,19 @@
+TOXICKÝ ODPAD - Premium Landing Page Spec
+
+Štýl: Ascend WebGL šablóna + envirolegal/envisys/rossium premium dizajn
+Téma: Toxický odpad, environmentálne služby, legislatíva, recyklácia
+
+Kľúčové prvky z promptu:
+- WebGL planeta ako background (ako Ascend)
+- Glassmorphism karty
+- Smooth scroll (Lenis)
+- Deep-space palette: #04060f bg, #5df0a8 accent (mint-green)
+- Inter font
+- 4 sekcie: Hero → Features → Showcase+Stats → CTA/Footer
+
+Štýl referencií:
+- envirolegal.sk - čistý tech, premium feel
+- envisys.sk - environmentálne služby, profesionalita  
+- rossium.sk - luxury environmental branding
+
+Cieľová URL: https://akire101.github.io/toxicky-odpad/

@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toxický Odpad | Premium Environmental Solutions</title>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root{
+            --bg:#04060f; --bg-2:#060a18; --ink:#f3f6ff; --muted:#9aa6c4; --muted-2:#6b7796;
+            --line:rgba(150,175,230,.12); --line-strong:rgba(150,175,230,.22);
+            --accent:#5df0a8; --accent-2:#2fd38a; --accent-ink:#032018;
+            --glass:rgba(12,18,38,.55); --glass-2:rgba(16,24,48,.65);
+            --radius:18px; --radius-lg:26px; --maxw:1180px;
+            --shadow:0 30px 80px -30px rgba(0,0,0,.75);
+            --font:'Inter',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+        }
+        
+        *{box-sizing:border-box;margin:0;padding:0}
+        html{scroll-behavior:smooth}
+        body{font-family:var(--font);color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:hidden;line-height:1.6}
+        
+        /* WebGL Canvas - fixed background */
+        #planet-canvas{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none}
+        
+        .page{position:relative;z-index:1;padding-top:80px}
+        .container{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+        
+        /* Hero */
+        .hero{min-height:100vh;display:flex;flex-direction:column;padding:80px 0 60px;position:relative;z-index:1}
+        .hero-scrim{position:absolute;top:0;left:0;right:0;height:35%;background:radial-gradient(125% 62% at 50% -10%,rgba(4,6,15,.82) 0%,rgba(4,6,15,.28) 44%,transparent 68%);z-index:-1}
+        
+        .nav{display:flex;justify-content:space-between;align-items:center;padding:22px 0;max-width:var(--maxw);margin:0 auto}
+        .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:19px;letter-spacing:.16em}
+        .brand-mark{color:var(--accent);font-size:14px;color:var(--accent)/* mint */}
+        .nav-links{display:flex;gap:30px;font-size:14.5px;color:var(--muted)}
+        .nav-links a{color:inherit;text-decoration:none;color:var(--muted);transition:color .2s}
+        .nav-links a:hover{color:var(--ink)}
+        
+        .hero-content{display:flex;flex-direction:column;align-items:center;text-align:center;max-width:800px;margin-top:40px;}
+        
+        h1{font-size:clamp(34px,5.2vw,62px);font-weight:800;line-height:1.04;letter-spacing:-.03em;margin-bottom:18px;text-shadow:0 2px 50px rgba(0,0,0,.55)}
+        .highlight{background:linear-gradient(180deg,var(--accent),var(--accent-2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        
+        h2{font-size:clamp(30px,4.4vw,50px);font-weight:800;line-height:1.05;letter-spacing:-.02em;margin-bottom:18px;text-shadow:0 2px 40px rgba(0,0,0,.6)}
+        
+        .eyebrow{display:inline-block;font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:18px}
+        p{font-size:clamp(16px,2vw,19px);color:var(--muted);line-height:1.65;text-shadow:0 1px 24px rgba(0,0,0,.55)}
+        
+        /* Buttons */
+        .btn{display:inline-flex;align-items:center;gap:9px;font-size:15px;font-weight:600;padding:13px 22px;border-radius:999px;border:1px solid transparent;cursor:pointer;text-decoration:none;white-space:nowrap;transition:transform .18s ease,box-shadow .25s ease,background .2s ease,border-color .2s ease}
+        .btn svg{width:17px;height:17px}
+        
+        .btn-primary{color:var(--accent-ink);background:linear-gradient(180deg,var(--accent),var(--accent-2));box-shadow:0 10px 30px -8px rgba(93,240,168,.55),inset 0 1px 0 rgba(255,255,255,.4)}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 16px 38px -8px rgba(93,240,168,.7)}
+        
+        .btn-outline{color:var(--ink);background:rgba(255,255,255,.04);border-color:var(--line-strong);backdrop-filter:blur(10px)}
+        .btn-outline:hover{background:rgba(255,255,255,.09);transform:translateY(-2px)}
+        
+        .hero-actions{display:flex;gap:14px;margin-top:38px}
+        
+        /* Features */
+        .section{position:relative;z-index:1;padding:clamp(80px,12vw,160px) 0}
+        .section-head{max-width:680px;margin:0 auto clamp(48px,6vw,80px);text-align:center}
+        
+        .feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin-top:30px}
+        
+        .card{padding:30px;border-radius:var(--radius);background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(14px);transition:transform .2s ease,box-shadow .25s ease,border-color .2s ease,background .2s ease;position:relative;overflow:hidden}
+        .card:hover{transform:translateY(-4px);border-color:var(--line-strong);background:var(--glass-2)}
+        
+        .card-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:18px;font-size:20px;color:var(--accent);background:rgba(93,240,168,.1);border:1px solid rgba(93,240,168,.18)}
+        
+        /* Stats */
+        .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-top:40px}
+        .stat{padding:30px 18px;border-radius:var(--radius);background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(12px);text-align:center}
+        .stat-value{font-size:clamp(30px,4vw,44px);font-weight:800;background:linear-gradient(180deg,#fff,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.2}
+        .stat-label{font-size:14px;color:var(--muted);margin-top:8px}
+        
+        /* Showcase */
+        .showcase-grid{display:grid;grid-template-columns:1fr 1.05fr;gap:clamp(36px,6vw,72px);max-width:var(--maxw);margin:0 auto}
+        @media (max-width:980px){.showcase-grid{grid-template-columns:1fr}}
+        
+        .dashboard{padding:24px;border-radius:var(--radius-lg);background:var(--glass-2);border:1px solid var(--line-strong);box-shadow:var(--shadow);backdrop-filter:blur(18px);height:500px;position:relative;overflow:hidden}
+        .dash-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+        .dash-live{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--accent);padding:4px 12px;border-radius:99px;background:rgba(93,240,168,.15)}
+        .dash-bars{display:flex;align-items:flex-end;gap:8px;height:180px;margin-bottom:24px;padding:0 12px}
+        .dash-bar{flex:1;background:linear-gradient(180deg,var(--accent),rgba(47,211,138,.25));border-radius:6 6 3 3;min-height:20px;width:100%}
+        .dash-rows{display:grid;grid-template-columns:1fr 1.2fr;gap:14px;font-size:13.5px;color:var(--muted)}
+        .dash-row{display:flex;align-items:center;justify-content:space-between;padding:10px;background:rgba(255,255,255,.06);border-radius:99px}
+        
+        /* Logo cloud */
+        .logos{display:flex;flex-direction:column;align-items:center;margin-top:40px;padding:0 24px clamp(36px,6vw,64px)}
+        .logos-label{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted-2);margin-bottom:20px}
+        .logos-row{display:flex;align-items:center;gap:clamp(24px,5vw,56px;flex-wrap:wrap;justify-content:center}
+        .logo{font-size:17px;font-weight:700;color:var(--muted-2);opacity:.8;transition:opacity .2s,color .2s}
+        .logo:hover{opacity:1;color:var(--ink)}
+        
+        /* CTA */
+        .cta{position:relative;z-index:1;padding:clamp(80px,12vw,160px) 0;text-align:center}
+        .cta-card{max-width:760px;margin:0 auto;padding:clamp(48px,7vw,80px) clamp(28px,5vw,64px);border-radius:var(--radius-lg);background:radial-gradient(120% 140% at 50% 0%,rgba(93,240,168,.12),transparent 55%),var(--glass-2);border:1px solid var(--line-strong);box-shadow:var(--shadow);backdrop-filter:blur(18px)}
+        
+        /* Footer */
+        .footer{position:relative;z-index:1;margin-top:clamp(64px,9vw,110px);padding-top:48px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:24px}
+        .footer-brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:19px;color:var(--ink)}
+        .footer-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:36px}
+        .footer-col h4{font-size:12px;color:var(--muted-2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:18px}
+        .footer-col a{display:block;font-size:14px;color:var(--muted);text-decoration:none;transition:color .2s}
+        .footer-col a:hover{color:var(--ink)}
+        
+        .copyright{text-align:center;font-size:13px;color:var(--muted-2);margin-top:24px}
+        
+        /* Reveal animations */
+        [data-reveal]{opacity:0;transform:translateY(26px);transition:opacity .7s cubic-bezier(.22,.7,.2,1),transform .7s cubic-bezier(.22,.7,.2,1);will-change:opacity,transform}
+        [data-reveal].in{opacity:1;transform:none}
+        
+        /* Responsive */
+        @media (max-width:720px){
+            .nav-links{display:none}
+            .section{padding:clamp(64px,16vw,110px) 20px}
+        }
+        
+        @media (max-width:560px){
+            .hero-actions{flex-direction:column;width:100%}
+            .btn{width:100%;justify-content:center}
+            .cta-card{padding:40px 22px}
+            .footer{flex-direction:column}
+        }
+        
+        /* Smooth scroll with Lenis */
+        html.lenis,html.lenis body{height:auto}
+        .lenis.lenis-smooth{scroll-behavior:auto !important}
+        .lenis.lenis-stopped{overflow:hidden}
+    </style>
+</head>
+<body>
+    <canvas id="planet-canvas"></canvas>
+    
+    <div class="page">
+        <!-- HERO -->
+        <section class="hero" data-reveal>
+            <div class="hero-scrim"></div>
+            
+            <nav class="nav">
+                <div class="brand">
+                    <span class="brand-mark">↑</span>
+                    <span>Toxický Odpad</span>
+                </div>
+                <div class="nav-links">
+                    <a href="#features">Služby</a>
+                    <a href="#showcase">Platforma</a>
+                    <a href="#cta">Kontakt</a>
+                </div>
+                <a href="#cta" class="btn btn-ghost">Konsultácia</a>
+            </nav>
+            
+            <div class="hero-content">
+                <h1>
+                    Manažér
+                    <span class="highlight">Toxického Odpadu</span>
+                </h1>
+                <p>Profesionálne riešenia pre environmentálny compliance, recykláciu a udržiateľné podnikanie. Expertíza v oblasti toxických látok, legislatívy a bezpečného nakladania s odpadom.</p>
+                
+                <div class="hero-actions">
+                    <a href="#cta" class="btn btn-primary">Dostúpte Riešenia →</a>
+                    <a href="https://envirolegal.sk/" target="_blank" class="btn btn-outline">Naše Reference ↗</a>
+                </div>
+            </div>
+            
+            <div class="logos">
+                <span class="logos-label">Využívajú vedúce firmy</span>
+                <div class="logos-row">
+                    <span class="logo">ENVIROLEGAL</span>
+                    <span class="logo">ENVISYS</span>
+                    <span class="logo">ROSSIUM</span>
+                    <span class="logo">EKO-MANAGEMENT</span>
+                    <span class="logo">KRONOS</span>
+                    <span class="logo">ALBATROS</span>
+                </div>
+            </div>
+        </section>
+        
+        <!-- FEATURES -->
+        <section id="features" class="section" data-reveal style="--rd:80ms">
+            <div class="section-head">
+                <span class="eyebrow">Všetko pod jednou strechou</span>
+                <h2>Jedna platforma pre kompletný environmentálny manažment</h2>
+                <p>Spojte monitorovanie, compliance a recykláciu do jedného prehľadného systému. Naša platforma vám dáva nadhľad nad všetkými aspektami nakladania s toxickým odpadom.</p>
+            </div>
+            
+            <div class="feature-grid">
+                <!-- Card 1 -->
+                <div class="card" data-reveal style="--rd:100ms">
+                    <div class="card-icon">📊</div>
+                    <h3>Live Analytics</h3>
+                    <p>Reálne časové dashbory transformujú dáta z vášho environmentálneho systému do jednej čísla, ktoré vám povie čo robiť.</p>
+                </div>
+                
+                <!-- Card 2 -->
+                <div class="card" data-reveal style="--rd:190ms">
+                    <div class="card-icon">🔄</div>
+                    <h3>Automatizované Workflowy</h3>
+                    <p>Automatizujte všetky prechody vizuálnymi, rozvetvenými pipelineami ktoré posúvajú procesy dopredu kým vy spíte.</p>
+                </div>
+                
+                <!-- Card 3 -->
+                <div class="card" data-reveal style="--rd:280ms">
+                    <div class="card-icon">🎯</div>
+                    <h3>Precision Monitoring</h3>
+                    <p>Cielené monitorovanie toxických látok s presnosťou na molekulovú úroveň. Detekujte riziká skôr ako sa stanú problémom.</p>
+                </div>
+                
+                <!-- Card 4 -->
+                <div class="card" data-reveal style="--rd:370ms">
+                    <div class="card-icon">⚡</div>
+                    <h3>Instant Reporting</h3>
+                    <p>Generujte reporty a dokumentáciu automaticky v reálnom čase. Splňte legislatívne požiadavky bez dodatočnej práce.</p>
+                </div>
+                
+                <!-- Card 5 -->
+                <div class="card" data-reveal style="--rd:460ms">
+                    <div class="card-icon">🔒</div>
+                    <h3>Enterprise Security</h3>
+                    <p>SOC 2, SSO a granular role management zabudované - bezpečnosť ktorá rastie spolu s vašim tímom.</p>
+                </div>
+                
+                <!-- Card 6 -->
+                <div class="card" data-reveal style="--rd:550ms">
+                    <div class="card-icon">🌍</div>
+                    <h3>Global Compliance</h3>
+                    <p>Multiregiónové, multicurrency riešenia s nízou latenciou kdekoľvek vaši zákazníci sú.</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SHOWCASE + STATS -->
+        <section id="showcase" class="section showcase" data-reveal style="--rd:80ms">
+            <div class="showcase-grid">
+                <!-- Copy left -->
+                <div class="showcase-copy">
+                    <span class="eyebrow">Vytvorené pre rast</span>
+                    <h2>Sledujte celú funnel v reálnom čase</h2>
+                    <p>Každá fáza, signál a euro - vykreslené live. Naša platforma dáva operátorom perspektívu na identifikáciu čo funguje a kontroly na zdvojnásobenie úsilia.</p>
+                    
+                    <div class="hero-actions" style="margin-top:30px;justify-content:center">
+                        <a href="#cta" class="btn btn-primary">Preskúmať Platformu →</a>
+                    </div>
+                </div>
+                
+                <!-- Dashboard mock -->
+                <div class="dashboard" data-reveal style="--rd:160ms">
+                    <div class="dash-header">
+                        <span>Pipeline - Q4 2026</span>
+                        <span class="dash-live"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#5df0a8;margin-right:6px"></span>Live</span>
+                    </div>
+                    
+                    <!-- Animated bars -->
+                    <div class="dash-bars">
+                        <div class="dash-bar" style="--h:62%"></div>
+                        <div class="dash-bar" style="--h:88%"></div>
+                        <div class="dash-bar" style="--h:47%"></div>
+                        <div class="dash-bar" style="--h:95%"></div>
+                        <div class="dash-bar" style="--h:71%"></div>
+                        <div class="dash-bar" style="--h:80%"></div>
+                        <div class="dash-bar" style="--h:58%"></div>
+                    </div>
+                    
+                    <!-- Stats rows -->
+                    <div class="dash-rows">
+                        <div class="dash-row">
+                            <span>Nové leady</span>
+                            <span style="color:#fff;font-weight:600">+90%</span>
+                        </div>
+                        <div class="dash-row">
+                            <span>Kvalifikované</span>
+                            <span style="color:#fff;font-weight:600">72%</span>
+                        </div>
+                        <div class="dash-row">
+                            <span>V rokovaní</span>
+                            <span style="color:#fff;font-weight:600">48%</span>
+                        </div>
+                        <div class="dash-row">
+                            <span>Zatvorené/ziskové</span>
+                            <span style="color:#fff;font-weight:600">34%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Stats -->
+            <div class="stats">
+                <div class="stat" data-reveal style="--rd:90ms">
+                    <div class="stat-value">3.4x</div>
+                    <div class="stat-label">Fastejší pipeline velocity - 92%</div>
+                </div>
+                <div class="stat" data-reveal style="--rd:170ms">
+                    <div class="stat-value">+92%</div>
+                    <div class="stat-label">Lead capture accuracy</div>
+                </div>
+                <div class="stat" data-reveal style="--rd:250ms">
+                    <div class="stat-value">11k+</div>
+                    <div class="stat-label">Tímov scaling na platforme</div>
+                </div>
+                <div class="stat" data-reveal style="--rd:330ms">
+                    <div class="stat-value">$2.1B</div>
+                    <div class="stat-label">Revenue influenced</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- CTA -->
+        <section id="cta" class="section cta" data-reveal style="--rd:80ms">
+            <div class="cta-card">
+                <span class="eyebrow">Pripravený na začiatok?</span>
+                <h2>Pochoďte svoj rast na novú trajektóriu</h2>
+                <p>Spustite za minúty. Žiadna platobná karta. Zrušte kedykoľvek. Príjdite s tisícami tímov ktoré compoundujú revenue na našej platforme.</p>
+                
+                <div class="hero-actions" style="margin-top:0;justify-content:center">
+                    <a href="mailto:info@toxickyodpad.sk" class="btn btn-primary">Zapnite si Free Trial →</a>
+                    <a href="mailto:sales@toxickyodpad.sk" class="btn btn-outline">Reč so Salesom</a>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-brand">
+                <span style="color:var(--accent)">↑</span>
+                <span>Toxický Odpad</span>
+            </div>
+            <div>Environmentálny compliance a recyklácia pre ambiciózne tímy.</div>
+            
+            <div class="footer-cols">
+                <div class="footer-col">
+                    <h4>Produkt</h4>
+                    <a href="#features">Funkcie</a>
+                    <a href="#showcase">Platforma</a>
+                    <a href="#cta">Ceny</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Firma</h4>
+                    <a href="#">O nás</a>
+                    <a href="#">Kariéra</a>
+                    <a href="#">Blog</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Legálne</h4>
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                    <a href="#">Security</a>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                © 2026 Toxický Odpad, s.r.o. - Vytvorené medzi hviezdami.
+            </div>
+        </footer>
+    </div>
+    
+    <!-- WebGL Three.js (Ascend style) -->
+    <script type="importmap">
+    { "imports": {
+        "three": "https://unpkg.com/three@0.143.0/build/three.module.js",
+        "three/examples/jsm/": "https://unpkg.com/three@0.143.0/examples/jsm/"
+    }}
+    </script>
+    
+    <script src="https://unpkg.com/lenis@1.3.23/dist/lenis.iife.min.js"></script>
+    
+    <script>
+        // Smooth scroll init
+        const lenis = new Lenis({ duration:1.15, smoothWheel:true, touchMultiplier:1.5 });
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+        
+        // Reveal animations on scroll
+        const observerOptions = { threshold:0.18, rootMargin:'0px 0px -8% 0px' };
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('in');
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+        
+        document.querySelectorAll('[data-reveal]').forEach(el => {
+            const delay = parseInt(el.style.getPropertyValue('--rd') || '0');
+            el.style.transitionDelay = `${delay}ms`;
+            revealObserver.observe(el);
+        });
+        
+        // WebGL Planet (simplified version for environmental theme)
+        import * as THREE from 'three';
+        
+        const canvas = document.getElementById('planet-canvas');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 200);
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias:true });
+        
+        renderer.setPixelRatio(devicePixelRatio);
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.VSMShadowMap;
+        
+        camera.position.set(0, 0, 8);
+        
+        // Ambient lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1.8);
+        scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(0, 10, 2);
+        scene.add(directionalLight);
+        
+        // Create environmental gradient sphere (representing Earth with atmospheric glow)
+        const geometry = new THREE.SphereGeometry(3, 64, 64);
+        
+        // Custom shader material for environmental theme
+        const material = new THREE.ShaderMaterial({
+            uniforms: {
+                uTime: { value: 0 },
+                uColor1: { value: new THREE.Color('#0a2a4a') }, // Deep ocean blue
+                uColor2: { value: new THREE.Color('#1a4a7a') }, // Sky blue
+                uGlow: { value: new THREE.Color('#3a6cff') },    // Cyan glow
+                uIntensity: { value: 0.8 }
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                varying vec3 vNormal;
+                varying float vHeight;
+                
+                void main() {
+                    vUv = uv;
+                    vNormal = normalize(normalMatrix * normal);
+                    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                    vHeight = position.y + position.x * 0.3;
+                    gl_Position = projectionMatrix * mvPosition;
+                }
+            `,
+            fragmentShader: `
+                uniform float uTime;
+                uniform vec3 uColor1;
+                uniform vec3 uColor2;
+                uniform vec3 uGlow;
+                uniform float uIntensity;
+                
+                varying vec2 vUv;
+                varying vec3 vNormal;
+                varying float vHeight;
+                
+                // Simplex noise (simplified)
+                float permute(vec4 x){return mod(((x*34.0)+1.0)*x, 289.0);}
+                float snoise(vec3 v){
+                    const vec4 C = vec4(1.0/6.0,1.0/3.0,1.0/3.0,-1.0);
+                    const vec4 D = vec4(0.0, 1.0, 2.0, 3.0);
+                    vec3 i  = floor(v + dot(v,C.yyy));
+                    vec3 x0 = v - i + dot(i,C.xxx);
+                    vec3 g = step(x0.yzx,x0.xyz);
+                    vec3 l = 1.0 - g;
+                    vec3 i1 = min(g.xyz,l.zxy);
+                    vec3 i2 = max(g.xyz,l.zxy);
+                    vec3 x1 = x0 - i1 + C.xxx;
+                    vec3 x2 = x0 - i2 + C.yyy;
+                    vec3 x3 = x0 - 1.0 + C.zzz;
+                    i = mod(i,289.0);
+                    vec4 p=permute(permute(permute(i.z+vec4(0.0,i1.z,i2.z,1.0))+i.y+vec4(0.0,i1.y,i2.y,1.0))+i.x+vec4(0.0,i1.x,i2.x,1.0));
+                    float n_ = 1.0/7.0;
+                    vec3 ns = n_*D.wyz-D.xzx;
+                    vec4 j = p-49.0*floor(p*ns.z*ns.z);
+                    vec4 x_=floor(j*ns.z);
+                    vec4 y_=floor(j-7.0*x_);
+                    vec4 x=x_*ns.x+ns.yyyy;
+                    vec4 y=y_*ns.x+ns.yyyy;
+                    vec4 h=1.0-abs(x)-abs(y);
+                    vec4 b0 = floor(b0)*2.0+1.0;
+                    vec4 s1 = floor(b1)*2.0+1.0;
+                    vec4 sh = -step(h,vec4(0.0));
+                    vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
+                    vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+                    vec3 p0=vec3(a0.xy,h.x);
+                    vec3 p1=vec3(a0.zw,h.y);
+                    vec3 p2=vec3(a1.xy,h.z);
+                    vec3 p3=vec3(a1.zw,h.w);
+                    vec4 norm = taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
+                    p0 *= norm.x;
+                    p1 *= norm.y;
+                    p2 *= norm.z;
+                    p3 *= norm.w;
+                    vec4 m = max(0.5-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0);
+                    m = m*m;
+                    return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
+                }
+                
+                void main() {
+                    vec3 normal = normalize(vNormal);
+                    vec3 viewDir = normalize(-vNormal);
+                    float rim = 1.0 - max(dot(viewDir, normal), 0.0);
+                    rim = pow(rim, 2.0) * 0.5;
+                    
+                    // Time-based animation
+                    float noise = snoise(vec3(vUv.x * 30.0 + uTime * 0.5, vUv.y * 30.0 - uTime * 0.7, uTime * 1.0));
+                    
+                    // Color mixing based on height/noise
+                    vec3 baseColor = mix(uColor1, uColor2, vHeight * 0.3 + noise * 0.3);
+                    
+                    // Additive glow
+                    float d = length(vUv - 0.5) * 2.0;
+                    float glowFade = pow(clamp(1.0 - d, 0.0, 1.0), 2.2);
+                    
+                    gl_FragColor = vec4(baseColor + rim * uGlow * uIntensity + glowFade * uGlow * uIntensity * 0.3, 1.0);
+                }
+            `,
+            transparent: true,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending
+        });
+        
+        const planet = new THREE.Mesh(geometry, material);
+        scene.add(planet);
+        
+        // Add atmospheric halo
+        const haloGeometry = new THREE.PlaneGeometry(8, 8);
+        const haloMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                uGlow: { value: new THREE.Color('#3a6cff') },
+                uIntensity: { value: 2.0 }
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform vec3 uGlow;
+                uniform float uIntensity;
+                varying vec2 vUv;
+                
+                void main() {
+                    float d = length(vUv - 0.5) * 2.0;
+                    float alpha = pow(clamp(1.0 - d, 0.0, 1.0), 2.2);
+                    gl_FragColor = vec4(uGlow, alpha * uIntensity);
+                }
+            `,
+            transparent: true,
+            side: THREE.DoubleSide
+        });
+        
+        const halo = new THREE.Mesh(haloGeometry, haloMaterial);
+        scene.add(halo);
+        
+        // Position planet behind content
+        planet.scale.set(1.5, 1.5, 1.5);
+        planet.position.y = -4.5;
+        
+        // Animation loop
+        let time = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            time += 0.016;
+            material.uniforms.uTime.value = time;
+            haloMaterial.uniforms.uTime.value = time;
+            
+            // Slow rotation
+            planet.rotation.y += 0.002;
+        }
+        
+        animate();
+        
+        // Handle resize
+        function onResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        window.addEventListener('resize', onResize);
+    </script>
+</body>
+</html>
