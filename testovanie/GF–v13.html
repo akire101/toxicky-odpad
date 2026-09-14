@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ENVI SET — Volumetric Fluid Dynamics Engine</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
+  
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+    }
+  }
+  </script>
+
+  <style>
+    :root {
+      --bg-deep: #020704;
+      --accent-gold: #f0d078;
+      --accent-emerald: #052e16;
+      --accent-quantum: #00ffaa;
+      --text-main: #ffffff;
+      --text-sub: #82958b;
+      --glass-panel: rgba(4, 16, 10, 0.75);
+      --glass-border: rgba(240, 208, 120, 0.22);
+      --font-title: 'Cinzel', serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      width: 100%;
+      min-height: 100vh;
+      background-color: var(--bg-deep);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #webgl-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .app-layer {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .interactive {
+      pointer-events: auto;
+    }
+
+    /* Ultra Glassmorphism */
+    .quantum-panel {
+      background: var(--glass-panel);
+      backdrop-filter: blur(30px) saturate(180%);
+      -webkit-backdrop-filter: blur(30px) saturate(180%);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 40px 100px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .quantum-panel:hover {
+      border-color: rgba(0, 255, 170, 0.45);
+      box-shadow: 0 50px 120px rgba(0, 255, 170, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    }
+
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 40px 80px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      background: linear-gradient(to bottom, rgba(2, 7, 4, 0.95), transparent);
+    }
+
+    .brand-title {
+      font-family: var(--font-title);
+      font-size: 1.6rem;
+      font-weight: 900;
+      letter-spacing: 6px;
+      color: var(--text-main);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .brand-node {
+      width: 12px;
+      height: 12px;
+      background: var(--accent-quantum);
+      box-shadow: 0 0 20px var(--accent-quantum);
+      transform: rotate(45deg);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 56px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-sub);
+      text-decoration: none;
+      font-size: 0.75rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      font-weight: 600;
+      transition: color 0.4s;
+    }
+
+    .nav-links a:hover {
+      color: var(--accent-gold);
+    }
+
+    .btn-quantum {
+      font-family: var(--font-body);
+      font-size: 0.75rem;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      font-weight: 800;
+      padding: 18px 42px;
+      background: transparent;
+      color: var(--accent-gold);
+      border: 1px solid var(--accent-gold);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.5s ease;
+    }
+
+    .btn-quantum:hover {
+      background: var(--accent-gold);
+      color: var(--bg-deep);
+      box-shadow: 0 0 50px rgba(240, 208, 120, 0.5);
+    }
+
+    /* Hero Section */
+    .hero-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 160px 80px 100px;
+      max-width: 1800px;
+      margin: 0 auto;
+    }
+
+    .hero-card {
+      max-width: 900px;
+      padding: 80px;
+      border-radius: 2px;
+    }
+
+    .sys-tag {
+      font-size: 0.7rem;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      color: var(--accent-quantum);
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .sys-tag::before {
+      content: '';
+      width: 50px;
+      height: 1px;
+      background: var(--accent-quantum);
+    }
+
+    .hero-title {
+      font-family: var(--font-title);
+      font-size: clamp(3rem, 6vw, 5.5rem);
+      line-height: 1.05;
+      font-weight: 700;
+      margin-bottom: 36px;
+    }
+
+    .hero-title span {
+      background: linear-gradient(135deg, var(--accent-gold), var(--accent-quantum));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-description {
+      font-size: 1.15rem;
+      color: var(--text-sub);
+      line-height: 1.9;
+      margin-bottom: 56px;
+      font-weight: 300;
+    }
+
+    /* Grid Tier */
+    .tier-section-title {
+      text-align: center;
+      margin-bottom: 80px;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 40px;
+      padding: 0 80px 160px;
+      max-width: 1800px;
+      margin: 0 auto;
+    }
+
+    .tier-card {
+      padding: 56px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 580px;
+    }
+
+    .tier-header-name {
+      font-family: var(--font-title);
+      font-size: 1.4rem;
+      letter-spacing: 4px;
+      margin-bottom: 16px;
+    }
+
+    .tier-price-val {
+      font-size: 3.2rem;
+      font-weight: 800;
+      color: var(--accent-gold);
+      margin-bottom: 36px;
+    }
+
+    .tier-price-val span {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      font-weight: 300;
+    }
+
+    .tier-features {
+      list-style: none;
+      margin-bottom: 56px;
+    }
+
+    .tier-features li {
+      font-size: 0.95rem;
+      color: var(--text-sub);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .tier-features li::before {
+      content: '◇';
+      color: var(--accent-quantum);
+    }
+
+    /* Calculator */
+    .calc-container {
+      padding: 0 80px 160px;
+      max-width: 1800px;
+      margin: 0 auto;
+    }
+
+    .calc-box {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      padding: 80px;
+    }
+
+    .control-group {
+      margin-bottom: 40px;
+    }
+
+    .control-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      color: var(--text-sub);
+    }
+
+    .custom-range {
+      width: 100%;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.15);
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    .custom-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 24px;
+      height: 24px;
+      background: var(--accent-quantum);
+      cursor: pointer;
+      box-shadow: 0 0 20px var(--accent-quantum);
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+
+    .metric-card {
+      padding: 40px;
+      text-align: center;
+    }
+
+    .metric-num {
+      font-family: var(--font-title);
+      font-size: 3.5rem;
+      color: var(--accent-quantum);
+      margin-bottom: 12px;
+    }
+
+    .metric-lbl {
+      font-size: 0.75rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--text-sub);
+    }
+
+    footer {
+      border-top: 1px solid var(--glass-border);
+      padding: 80px;
+      text-align: center;
+      font-size: 0.85rem;
+      letter-spacing: 4px;
+      color: var(--text-sub);
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 1200px) {
+      .grid-container, .calc-box { grid-template-columns: 1fr; }
+      header { padding: 30px 40px; }
+      .hero-container, .grid-container, .calc-container { padding-left: 40px; padding-right: 40px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Fixed WebGL Background Canvas -->
+  <div id="webgl-container"></div>
+
+  <div class="app-layer">
+    
+    <header class="interactive">
+      <a href="#" class="brand-title">
+        <div class="brand-node"></div>
+        ENVI SET
+      </a>
+      <ul class="nav-links">
+        <li><a href="#ekosystem">Ekosystém</a></li>
+        <li><a href="#kalkulacia">Kvantifikácia Úspor</a></li>
+        <li><a href="#audit">Enterprise Audit</a></li>
+      </ul>
+      <button class="btn-quantum" onclick="scrollToTarget('audit')">Iniciovať Audit</button>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-container">
+      <div class="quantum-panel hero-card interactive">
+        <div class="sys-tag">Volumetric Fluid Dynamics & Resource Refinement</div>
+        <h1 class="hero-title">
+          Hydro-dynamická <span>rekonštrukcia materiálov</span>.
+        </h1>
+        <p class="hero-description">
+          Zabezpečujeme pokročilú molekulárnu a fyzikálnu recykláciu náročných priemyselných prúdov. Pozadie simuluje hydraulický vírový tok a optickú disperziu skla v reálnom čase.
+        </p>
+        <div style="display: flex; gap: 32px;">
+          <button class="btn-quantum" onclick="triggerVortexBurst()">Kinetický Impulz</button>
+          <button class="btn-quantum" style="border-color: var(--accent-quantum); color: var(--accent-quantum);" onclick="toggleTurbulence()">Zmeniť Rýchlosť</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Enterprise Tier Grid -->
+    <div class="tier-section-title interactive" id="ekosystem">
+      <div class="sys-tag" style="justify-content: center;">Enterprise Portfólio</div>
+      <h2 style="font-family: var(--font-title); font-size: 3rem;">Modely Integrácie pre Rok 2026</h2>
+    </div>
+
+    <div class="grid-container interactive">
+      <div class="quantum-panel tier-card">
+        <div>
+          <div class="tier-header-name">MINI ZÁKLAD</div>
+          <div class="tier-price-val">389 € <span>/ ročne</span></div>
+          <ul class="tier-features">
+            <li>Kategorizácia a evidencia odpadu</li>
+            <li>Plná zhoda s legislatívou MŽP SR</li>
+            <li>Kvartálny analytický výkaz</li>
+          </ul>
+        </div>
+        <button class="btn-quantum" style="width: 100%;" onclick="scrollToTarget('audit')">Zvoliť Balík</button>
+      </div>
+
+      <div class="quantum-panel tier-card" style="border-color: var(--accent-gold);">
+        <div>
+          <div class="tier-header-name" style="color: var(--accent-gold);">PARTNER</div>
+          <div class="tier-price-val">669 € <span>/ ročne</span></div>
+          <ul class="tier-features">
+            <li>Všetky funkcie MINI ZÁKLAD</li>
+            <li>Automatizované ohlásenia na orgány</li>
+            <li>Optická separácia a logistika</li>
+            <li>Eliminácia environmentálnych rizík</li>
+          </ul>
+        </div>
+        <button class="btn-quantum" style="width: 100%; background: var(--accent-gold); color: var(--bg-deep);" onclick="scrollToTarget('audit')">Zvoliť Balík</button>
+      </div>
+
+      <div class="quantum-panel tier-card">
+        <div>
+          <div class="tier-header-name">BEZ STAROSTÍ</div>
+          <div class="tier-price-val">929 € <span>/ ročne</span></div>
+          <ul class="tier-features">
+            <li>Všetky funkcie PARTNER</li>
+            <li>Právne zastupovanie pri SIŽP</li>
+            <li>Nepretržitý zber a spracovanie 24/7</li>
+            <li>Vyhradený Sustainability Officer</li>
+          </ul>
+        </div>
+        <button class="btn-quantum" style="width: 100%;" onclick="scrollToTarget('audit')">Zvoliť Balík</button>
+      </div>
+    </div>
+
+    <!-- Live Calculator -->
+    <div class="calc-container interactive" id="kalkulacia">
+      <div class="quantum-panel calc-box">
+        <div>
+          <div class="sys-tag">Real-Time Material Simulator</div>
+          <h3 style="font-family: var(--font-title); font-size: 2.2rem; margin-bottom: 32px;">Kvantifikácia prevádzkového dopadu</h3>
+          
+          <div class="control-group">
+            <div class="control-label">
+              <span>Ročná produkcia materiálu (Tony)</span>
+              <span id="txt-vol" style="color: var(--accent-gold);">750 t</span>
+            </div>
+            <input type="range" min="100" max="10000" value="750" class="custom-range" id="input-vol" oninput="recalculateMetrics()">
+          </div>
+
+          <div class="control-group">
+            <div class="control-label">
+              <span>Miera cirkulárnej rekonštrukcie</span>
+              <span id="txt-rate" style="color: var(--accent-quantum);">75%</span>
+            </div>
+            <input type="range" min="10" max="100" value="75" class="custom-range" id="input-rate" oninput="recalculateMetrics()">
+          </div>
+        </div>
+
+        <div class="metric-grid">
+          <div class="quantum-panel metric-card">
+            <div class="metric-num" id="out-financial">15,975 €</div>
+            <div class="metric-lbl">Priama ročná úspora</div>
+          </div>
+          <div class="quantum-panel metric-card">
+            <div class="metric-num" id="out-carbon" style="color: var(--accent-gold);">427 t</div>
+            <div class="metric-lbl">Redukcia CO₂ stopy</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Audit Section -->
+    <section class="hero-container interactive" id="audit" style="min-height: auto; padding-bottom: 160px;">
+      <div class="quantum-panel" style="padding: 100px; text-align: center; width: 100%;">
+        <div class="sys-tag" style="justify-content: center;">Institutional Audit Access</div>
+        <h2 style="font-family: var(--font-title); font-size: 3.5rem; margin-bottom: 28px;">Spustiť Enterprise Audit</h2>
+        <p style="color: var(--text-sub); max-width: 650px; margin: 0 auto 48px; line-height: 1.9; font-weight: 300;">
+          Náš inžiniersky tím navrhne optimálny model cirkulárnej transformácie pre vašu prevádzku.
+        </p>
+        <a href="mailto:enterprise@enviset.sk" class="btn-quantum" style="text-decoration: none; display: inline-block;">Nadviazať Spoluprácu</a>
+      </div>
+    </section>
+
+    <footer class="interactive">
+      &copy; 2026 ENVI SET S.R.O. — Volumetric Processing Engine. Všetky práva vyhradené.
+    </footer>
+
+  </div>
+
+  <!-- High-Visibility WebGL Fluid Vortex Engine Script -->
+  <script type="module">
+    import * as THREE from 'three';
+
+    let scene, camera, renderer, instancedMesh;
+    const PARTICLE_COUNT = 650;
+    const dummy = new THREE.Object3D();
+    const particles = [];
+    
+    let mouse = new THREE.Vector2(0, 0);
+    let targetMouse = new THREE.Vector2(0, 0);
+    let speedMultiplier = 1.0;
+
+    // GLSL Shader s vybalansovanou emisiou farieb a optickou disperziou
+    const FluidShader = {
+      uniforms: {
+        uTime: { value: 0 }
+      },
+      vertexShader: `
+        varying vec3 vNormal;
+        varying vec3 vWorldPosition;
+
+        void main() {
+          vNormal = normalize(normalMatrix * normal);
+          vec4 worldPos = modelMatrix * vec4(position, 1.0);
+          vWorldPosition = worldPos.xyz;
+          gl_Position = projectionMatrix * viewMatrix * worldPos;
+        }
+      `,
+      fragmentShader: `
+        varying vec3 vNormal;
+        varying vec3 vWorldPosition;
+        uniform float uTime;
+
+        void main() {
+          vec3 viewDir = normalize(cameraPosition - vWorldPosition);
+          float fresnel = pow(1.0 - max(dot(viewDir, vNormal), 0.0), 2.0);
+
+          // Jasné, svietivé neónové tóny pre garanciu viditeľnosti
+          vec3 emeraldCore = vec3(0.0, 0.85, 0.45); // Jasná smaragdová
+          vec3 goldEdge = vec3(0.95, 0.82, 0.35);    // Zlato
+          vec3 cyanGlow = vec3(0.0, 1.0, 0.85);     // Azúrový lesk
+
+          vec3 color = mix(emeraldCore, goldEdge, fresnel);
+          color += cyanGlow * pow(fresnel, 3.0) * 0.8;
+
+          // Transparentný priehľad pre hĺbkový efekt skla
+          gl_FragColor = vec4(color, 0.85);
+        }
+      `
+    };
+
+    function initEngine() {
+      const container = document.getElementById('webgl-container');
+
+      scene = new THREE.Scene();
+      
+      camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+      camera.position.set(0, 0, 14);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      container.appendChild(renderer.domElement);
+
+      // Geometria s ostrými hranami pre viditeľné odrazy svetla (Sklenený granulát)
+      const geometry = new THREE.IcosahedronGeometry(0.35, 1);
+      
+      const material = new THREE.ShaderMaterial({
+        vertexShader: FluidShader.vertexShader,
+        fragmentShader: FluidShader.fragmentShader,
+        uniforms: THREE.UniformsUtils.clone(FluidShader.uniforms),
+        transparent: true,
+        side: THREE.DoubleSide
+      });
+
+      instancedMesh = new THREE.InstancedMesh(geometry, material, PARTICLE_COUNT);
+
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        const radius = 2.5 + Math.random() * 6.5;
+        const angle = Math.random() * Math.PI * 2;
+        const height = (Math.random() - 0.5) * 14;
+
+        const pos = new THREE.Vector3(
+          Math.cos(angle) * radius,
+          height,
+          Math.sin(angle) * radius
+        );
+
+        const speed = 0.004 + Math.random() * 0.008;
+        const rotSpeed = new THREE.Vector3(
+          (Math.random() - 0.5) * 0.03,
+          (Math.random() - 0.5) * 0.03,
+          (Math.random() - 0.5) * 0.03
+        );
+
+        particles.push({ pos, radius, angle, speed, rotSpeed, height });
+
+        dummy.position.copy(pos);
+        dummy.updateMatrix();
+        instancedMesh.setMatrixAt(i, dummy.matrix);
+      }
+
+      scene.add(instancedMesh);
+
+      window.addEventListener('resize', onResize);
+      window.addEventListener('mousemove', onMouseMove);
+    }
+
+    function onMouseMove(e) {
+      targetMouse.x = (e.clientX / window.innerWidth - 0.5) * 2;
+      targetMouse.y = -(e.clientY / window.innerHeight - 0.5) * 2;
+    }
+
+    function onResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    window.triggerVortexBurst = function() {
+      speedMultiplier = 3.0;
+      setTimeout(() => { speedMultiplier = 1.0; }, 1000);
+    };
+
+    window.toggleTurbulence = function() {
+      speedMultiplier = speedMultiplier === 1.0 ? 0.3 : 1.0;
+    };
+
+    function animate(time) {
+      requestAnimationFrame(animate);
+
+      const t = time * 0.001;
+      mouse.lerp(targetMouse, 0.05);
+
+      instancedMesh.material.uniforms.uTime.value = t;
+
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        const p = particles[i];
+
+        // Pohyb vo víre (Hydro-vortex)
+        p.angle += p.speed * speedMultiplier;
+        p.height += Math.sin(t + p.angle) * 0.005;
+
+        if (p.height > 8) p.height = -8;
+        if (p.height < -8) p.height = 8;
+
+        const dynRadius = p.radius + Math.sin(t * 1.2 + p.height) * 0.4 + (mouse.x * 0.5);
+
+        p.pos.x = Math.cos(p.angle) * dynRadius;
+        p.pos.z = Math.sin(p.angle) * dynRadius;
+        p.pos.y = p.height + (mouse.y * 0.4);
+
+        dummy.position.copy(p.pos);
+        dummy.rotation.x += p.rotSpeed.x;
+        dummy.rotation.y += p.rotSpeed.y;
+        
+        const scale = 0.7 + Math.sin(t * 2.0 + p.angle) * 0.3;
+        dummy.scale.set(scale, scale, scale);
+        dummy.updateMatrix();
+
+        instancedMesh.setMatrixAt(i, dummy.matrix);
+      }
+
+      instancedMesh.instanceMatrix.needsUpdate = true;
+      renderer.render(scene, camera);
+    }
+
+    window.recalculateMetrics = function() {
+      const vol = document.getElementById('input-vol').value;
+      const rate = document.getElementById('input-rate').value;
+
+      document.getElementById('txt-vol').innerText = `${vol} t`;
+      document.getElementById('txt-rate').innerText = `${rate}%`;
+
+      const savings = Math.round(vol * 28.4 * (rate / 100));
+      const carbon = Math.round(vol * 0.76 * (rate / 100));
+
+      document.getElementById('out-financial').innerText = `${savings.toLocaleString()} €`;
+      document.getElementById('out-carbon').innerText = `${carbon.toLocaleString()} t`;
+    };
+
+    window.scrollToTarget = function(id) {
+      document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+    };
+
+    initEngine();
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>

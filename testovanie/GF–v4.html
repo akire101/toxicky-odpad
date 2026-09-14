@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Toxický Odpad — Ekologická & Legálna Likvidácia</title>
+  
+  <!-- Google Fonts Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Importmap pre Three.js r0.143.0 -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.143.0/build/three.module.js",
+      "three/examples/jsm/": "https://unpkg.com/three@0.143.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <style>
+    :root {
+      /* Stmavené pozadie pre elimináciu prílišnej belosti */
+      --bg-light: #dbe4dd;
+      --card-bg: rgba(255, 255, 255, 0.88);
+      --card-border: rgba(27, 138, 76, 0.25);
+      --card-hover-border: rgba(27, 138, 76, 0.6);
+      --accent-green: #146c3a;
+      --accent-green-hover: #0d4a27;
+      --accent-light-green: #c8e6d3;
+      --accent-gold: #d97706;
+      --text-dark: #0f172a;
+      --text-muted: #334155;
+      --text-dim: #475569;
+      --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      width: 100%;
+      min-height: 100vh;
+      background-color: var(--bg-light);
+      color: var(--text-dark);
+      font-family: var(--font-family);
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    /* Fixed Canvas pre 3D WebGL Pozadie */
+    .planet-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .page {
+      position: relative;
+      z-index: 3;
+      width: 100%;
+    }
+
+    /* Glassmorphism štýl s vyšším kontrastom */
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      box-shadow: 0 14px 35px rgba(15, 23, 42, 0.08);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                  border-color 0.4s ease,
+                  box-shadow 0.4s ease;
+    }
+
+    .glass-card:hover {
+      border-color: var(--card-hover-border);
+      box-shadow: 0 22px 50px rgba(20, 108, 58, 0.18);
+    }
+
+    /* Navigácia */
+    .nav-bar {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      max-width: 1200px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 28px;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      font-size: 1.25rem;
+      color: var(--accent-green);
+      text-decoration: none;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--accent-green);
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83'/%3E%3C/svg%3E") no-repeat center / contain;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83'/%3E%3C/svg%3E") no-repeat center / contain;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--accent-green);
+    }
+
+    .btn-green {
+      background: var(--accent-green);
+      color: #ffffff;
+      font-weight: 700;
+      padding: 12px 26px;
+      border-radius: 50px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(20, 108, 58, 0.35);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: inline-block;
+    }
+
+    .btn-green:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 8px 24px rgba(20, 108, 58, 0.45);
+      background: var(--accent-green-hover);
+    }
+
+    /* Sekcie */
+    section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 140px 20px 80px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Hero sekcia */
+    .hero-section {
+      text-align: center;
+      position: relative;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      border-radius: 30px;
+      background: rgba(200, 230, 211, 0.95);
+      border: 1px solid var(--card-border);
+      color: var(--accent-green);
+      font-size: 0.85rem;
+      font-weight: 800;
+      margin-bottom: 24px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
+    }
+
+    .hero-title {
+      font-size: clamp(2.5rem, 5vw, 4.2rem);
+      font-weight: 900;
+      line-height: 1.15;
+      margin-bottom: 20px;
+      color: var(--text-dark);
+    }
+
+    .hero-title span {
+      color: var(--accent-green);
+    }
+
+    .hero-subtitle {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      max-width: 720px;
+      margin: 0 auto 36px;
+      line-height: 1.6;
+    }
+
+    .hero-ctas {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--text-dark);
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      padding: 12px 26px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-weight: 700;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-secondary:hover {
+      background: #ffffff;
+      transform: translateY(-2px);
+      border-color: rgba(0, 0, 0, 0.3);
+    }
+
+    /* Galéria obrázkov */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+      width: 100%;
+      margin-top: 40px;
+    }
+
+    .gallery-card {
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      height: 240px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    }
+
+    .gallery-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .gallery-card:hover img {
+      transform: scale(1.08);
+    }
+
+    .gallery-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(15, 23, 42, 0.85) 0%, transparent 60%);
+      display: flex;
+      align-items: flex-end;
+      padding: 20px;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+
+    /* Sekcia Služieb a Cenníka */
+    .services-header {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      width: 100%;
+      margin-bottom: 60px;
+    }
+
+    .pricing-card {
+      padding: 36px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      position: relative;
+    }
+
+    .pricing-card:hover {
+      transform: translateY(-8px);
+    }
+
+    .pricing-badge {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: var(--accent-green);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 12px;
+      text-transform: uppercase;
+    }
+
+    .pricing-badge.gold {
+      background: var(--accent-gold);
+    }
+
+    .pricing-card h3 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+      color: var(--accent-green);
+    }
+
+    .price-tag {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: var(--text-dark);
+      margin-bottom: 16px;
+    }
+
+    .price-tag span {
+      font-size: 0.95rem;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    .feature-list {
+      list-style: none;
+      margin-bottom: 28px;
+      flex-grow: 1;
+    }
+
+    .feature-list li {
+      margin-bottom: 12px;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      line-height: 1.4;
+    }
+
+    .feature-list li::before {
+      content: "?";
+      color: var(--accent-green);
+      font-weight: 900;
+    }
+
+    /* Jednorazové služby */
+    .single-services {
+      width: 100%;
+      padding: 40px;
+      margin-top: 20px;
+    }
+
+    .single-services-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-bottom: 28px;
+      text-align: center;
+      color: var(--text-dark);
+    }
+
+    .single-services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .single-service-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 20px;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .single-service-item:hover {
+      background: #ffffff;
+      transform: translateX(4px);
+      border-color: var(--card-hover-border);
+    }
+
+    .single-service-item span {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .single-service-item strong {
+      color: var(--accent-green);
+      font-size: 1.15rem;
+      white-space: nowrap;
+      margin-left: 12px;
+    }
+
+    /* Interaktívny 3D kôš & Štatistiky */
+    .showcase-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      width: 100%;
+      align-items: center;
+    }
+
+    .interactive-box {
+      padding: 40px;
+      text-align: left;
+    }
+
+    .waste-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .btn-waste {
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      color: var(--text-dark);
+      padding: 14px 22px;
+      border-radius: 16px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-waste:hover {
+      border-color: var(--accent-green);
+      background: var(--accent-light-green);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(20, 108, 58, 0.2);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .stat-card {
+      padding: 28px;
+      text-align: center;
+    }
+
+    .stat-val {
+      font-size: 2.6rem;
+      font-weight: 900;
+      color: var(--accent-green);
+      margin-bottom: 6px;
+    }
+
+    .stat-lbl {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+    }
+
+    /* CTA & Footer */
+    .cta-box {
+      padding: 60px 40px;
+      text-align: center;
+      width: 100%;
+      max-width: 850px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(200,230,211,0.85) 100%);
+      margin-bottom: 60px;
+    }
+
+    .cta-box h2 {
+      font-size: 2.5rem;
+      font-weight: 900;
+      margin-bottom: 16px;
+      color: var(--text-dark);
+    }
+
+    .cta-box p {
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto 30px;
+      font-size: 1.05rem;
+      line-height: 1.6;
+    }
+
+    footer {
+      width: 100%;
+      text-align: center;
+      padding: 30px;
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    /* Animácie Scroll Reveal */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(40px) scale(0.98);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+                  transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .fade-up.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    /* Toast Upozornenie */
+    .toast-notification {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #ffffff;
+      border: 2px solid var(--accent-green);
+      padding: 14px 24px;
+      border-radius: 16px;
+      color: var(--text-dark);
+      font-weight: 700;
+      font-size: 0.95rem;
+      z-index: 1000;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+    }
+
+    .toast-notification.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 768px) {
+      .showcase-layout {
+        grid-template-columns: 1fr;
+      }
+      .nav-links {
+        display: none;
+      }
+      .hero-title {
+        font-size: 2.2rem;
+      }
+      section {
+        padding: 100px 16px 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- WebGL Canvas pre 3D animáciu na pozadí -->
+  <canvas class="planet-canvas" id="planetCanvas"></canvas>
+
+  <!-- Hlavný obsah stránky -->
+  <div class="page" id="top">
+    
+    <!-- Navigácia -->
+    <nav class="nav-bar glass-card">
+      <a href="#top" class="brand">
+        <div class="brand-icon"></div>
+        <span>Toxický Odpad</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#galeria">Galéria</a></li>
+        <li><a href="#sluzby">Balíky služieb</a></li>
+        <li><a href="#jednorazove">Cenník</a></li>
+        <li><a href="#recyklacia">Simulátor</a></li>
+      </ul>
+      <a href="#kontakt" class="btn-green">Bezplatné Stretnutie</a>
+    </nav>
+
+    <!-- Hero Sekcia -->
+    <section class="hero-section">
+      <div class="badge fade-up">
+        <span class="badge-dot"></span> Ekologické & Legálne Spracovanie Odpadu
+      </div>
+      <h1 class="hero-title fade-up">
+        Pomáhame firmám byť <span>efektívne</span>,<br>zodpovedné a v súlade so zákonom
+      </h1>
+      <p class="hero-subtitle fade-up">
+        Zbavte svoju spoločnosť administratívnej záťaže a nebezpečných odpadov. Zabezpečíme kompletný stav prevádzky podľa platnej legislatívy MŽP SR.
+      </p>
+      <div class="hero-ctas fade-up">
+        <a href="#recyklacia" class="btn-green">Vyskúšať 3D Simulátor</a>
+        <a href="#sluzby" class="btn-secondary">Prezrieť Balíky Služieb</a>
+      </div>
+    </section>
+
+    <!-- Sekcia Galérie Obrázkov -->
+    <section id="galeria" style="min-height: auto; padding-top: 40px;">
+      <div class="services-header fade-up">
+        <div class="badge"><span class="badge-dot"></span> Vizuálny Prehľad</div>
+        <h2 style="font-size: 2.2rem; font-weight: 900;">Bezpečná manipulácia a recyklácia</h2>
+      </div>
+
+      <div class="gallery-grid width-100">
+        <div class="gallery-card glass-card fade-up">
+          <img src="https://images.unsplash.com/photo-1611284446314-60a55ac7deab?auto=format&fit=crop&w=800&q=80" alt="Skladovanie chemického odpadu">
+          <div class="gallery-overlay">Skladovanie nebezpečných látok</div>
+        </div>
+        <div class="gallery-card glass-card fade-up">
+          <img src="https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=800&q=80" alt="Laboratórny rozbor odpadu">
+          <div class="gallery-overlay">Laboratórna analýza & vzorky</div>
+        </div>
+        <div class="gallery-card glass-card fade-up">
+          <img src="https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=800&q=80" alt="Recyklácia a triedenie">
+          <div class="gallery-overlay">Ekologická recyklácia surovín</div>
+        </div>
+        <div class="gallery-card glass-card fade-up">
+          <img src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80" alt="Bezpečný transport">
+          <div class="gallery-overlay">Špeciálny transport nebezpečných odpadov</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sekcia Balíky Služieb -->
+    <section id="sluzby">
+      <div class="services-header fade-up">
+        <div class="badge"><span class="badge-dot"></span> Balíky Služieb</div>
+        <h2 style="font-size: 2.2rem; font-weight: 900;">Systém odpadového hospodárstva na mieru</h2>
+      </div>
+
+      <div class="services-grid">
+        <!-- Balík 1 -->
+        <div class="pricing-card glass-card fade-up">
+          <div class="pricing-badge">Štart pre malé firmy</div>
+          <h3>ODPADY – MINI ZÁKLAD</h3>
+          <div class="price-tag">389 € <span>/ ročne</span></div>
+          <ul class="feature-list">
+            <li>Analýza spoločnosti v oblasti OH</li>
+            <li>Zadelenie odpadov podľa činnosti</li>
+            <li>Vypracovanie evidenčných listov odpadu</li>
+            <li>Vedenie elektronickej evidencie</li>
+          </ul>
+          <a href="#kontakt" class="btn-secondary" style="text-align: center;">Vybrať Balík</a>
+        </div>
+
+        <!-- Balík 2 -->
+        <div class="pricing-card glass-card fade-up" style="border: 2px solid var(--accent-green);">
+          <div class="pricing-badge">Najobľúbenejší</div>
+          <h3>ODPADY – PARTNER</h3>
+          <div class="price-tag">669 € <span>/ ročne</span></div>
+          <ul class="feature-list">
+            <li>Všetko z balíka MINI ZÁKLAD</li>
+            <li>Vypracovanie a priebežná aktualizácia dokumentácie OH</li>
+            <li>Vedenie elektronickej evidencie odpadov</li>
+            <li>Vypracovanie a podanie elektronického ohlásenia na MŽP</li>
+          </ul>
+          <a href="#kontakt" class="btn-green" style="text-align: center;">Vybrať Balík</a>
+        </div>
+
+        <!-- Balík 3 -->
+        <div class="pricing-card glass-card fade-up">
+          <div class="pricing-badge gold">Kompletný servis</div>
+          <h3>ODPADY – BEZ STAROSTÍ</h3>
+          <div class="price-tag">929 € <span>/ ročne</span></div>
+          <ul class="feature-list">
+            <li>Všetko z balíka PARTNER</li>
+            <li>Priebežné sledovanie legislatívnych zmien v oblasti OH</li>
+            <li>Archivácia podkladov pre potreby kontrolných orgánov</li>
+            <li>Pravidelné obhliadky pracoviska spojené s kontrolou</li>
+            <li>Identifikácia nedostatkov a návrh riešení pre ich odstránenie</li>
+            <li>Odborné telefonické a emailové poradenstvo 24/7</li>
+          </ul>
+          <a href="#kontakt" class="btn-secondary" style="text-align: center;">Vybrať Balík</a>
+        </div>
+      </div>
+
+      <!-- Jednorazové služby -->
+      <div class="single-services glass-card fade-up" id="jednorazove">
+        <h3 class="single-services-title">Jednorazové Služby Podľa Potreby Klienta</h3>
+        <div class="single-services-grid">
+          <div class="single-service-item">
+            <span>Individuálna konzultácia na prevádzke (do 1 hod.)</span>
+            <strong>147 €</strong>
+          </div>
+          <div class="single-service-item">
+            <span>Vypracovanie registrácie na MŽP (pre obaly)</span>
+            <strong>49 €</strong>
+          </div>
+          <div class="single-service-item">
+            <span>Vypracovanie podkladov k zmluve s OZV</span>
+            <strong>49 €</strong>
+          </div>
+          <div class="single-service-item">
+            <span>Vypracovanie a podanie ohlásenia pre obaly</span>
+            <strong>59 €</strong>
+          </div>
+          <div class="single-service-item">
+            <span>Vypracovanie plánu opatrení pre prípad havácie</span>
+            <strong>189 €</strong>
+          </div>
+          <div class="single-service-item">
+            <span>Prevádzkový poriadok skladu nebezpečných odpadov</span>
+            <strong>229 €</strong>
+          </div>
+          <div class="single-service-item">
+            <span>Školenie v oblasti odpadového hospodárstva (do 2 hod.)</span>
+            <strong>199 €</strong>
+          </div>
+          <div class="single-service-item">
+            <span>Identifikačný list nebezpečného odpadu (1 ks)</span>
+            <strong>55 €</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sekcia Interaktívneho Recyklačného Koša -->
+    <section id="recyklacia">
+      <div class="showcase-layout">
+        <!-- Panel na ovládanie vhadzovania odpadu -->
+        <div class="interactive-box glass-card fade-up">
+          <div class="badge"><span class="badge-dot"></span> Interaktívna 3D Simulácia</div>
+          <h3 style="font-size: 1.8rem; margin-bottom: 12px; font-weight: 800;">Zelený Recyklačný Kôš</h3>
+          <p style="color: var(--text-muted); line-height: 1.6; font-size: 0.95rem;">
+            Vyberte typ odpadu a kliknutím ho vhoďte priamo do zeleného recyklačného koša v 3D priestore. Sledujte bezpečné spracovanie nebezpečných aj bežných odpadových materiálov.
+          </p>
+          <div class="waste-controls">
+            <button class="btn-waste" onclick="dropWaste('drum')">??? Chemický Bareľ</button>
+            <button class="btn-waste" onclick="dropWaste('canister')">?? Plastový Kanister</button>
+            <button class="btn-waste" onclick="dropWaste('bottle')">?? Plastová Fľaša</button>
+            <button class="btn-waste" onclick="dropWaste('box')">?? Papierový Obal</button>
+          </div>
+        </div>
+
+        <!-- Štatistiky -->
+        <div class="stats-grid">
+          <div class="stat-card glass-card fade-up">
+            <div class="stat-val" id="recycledCount">1 482</div>
+            <div class="stat-lbl">Zrecyklovaných Objektov</div>
+          </div>
+          <div class="stat-card glass-card fade-up">
+            <div class="stat-val">100%</div>
+            <div class="stat-lbl">Legislatívna Zhoda</div>
+          </div>
+          <div class="stat-card glass-card fade-up">
+            <div class="stat-val">0 %</div>
+            <div class="stat-lbl">Riziko Pokút</div>
+          </div>
+          <div class="stat-card glass-card fade-up">
+            <div class="stat-val">24/7</div>
+            <div class="stat-lbl">Eko Podpora</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sekcia CTA & Pätička -->
+    <section id="kontakt">
+      <div class="cta-box glass-card fade-up">
+        <h2>Bezplatné Osobné Stretnutie</h2>
+        <p>Dohodnite si bezplatné osobné stretnutie s naším špecialistom na odpadové hospodárstvo, ktorý vás navštívi priamo vo firme a pomôže navrhnúť vhodné riešenie.</p>
+        <a href="mailto:info@toxickyodpad.sk" class="btn-green" style="padding: 16px 40px; font-size: 1.1rem;">Dohodnúť Stretnutie</a>
+      </div>
+
+      <footer>
+        <p>&copy; 2026 Toxický Odpad / ENVI set — Profesionálne riešenia pre vašu firmu. Jednoducho. Rýchlo. Spoľahlivo.</p>
+      </footer>
+    </section>
+
+  </div>
+
+  <!-- Toast Upozornenie -->
+  <div class="toast-notification" id="toast">Odpad bol úspešne vhodený do recyklačného koša!</div>
+
+  <!-- Lenis Smooth Scroll -->
+  <script type="module">
+    import Lenis from 'https://unpkg.com/lenis@1.3.23/dist/lenis.mjs';
+    
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true
+    });
+
+    function raf(time) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+  </script>
+
+  <!-- Three.js 3D WebGL Aplikácia s Profesionálnym Kôšom -->
+  <script type="module">
+    import * as THREE from 'three';
+
+    let scene, camera, renderer;
+    let recycleBinGroup, natureParticles;
+    let fallingObjects = [];
+    let recycledCounter = 1482;
+
+    function init() {
+      const canvas = document.getElementById('planetCanvas');
+
+      // 1. Scéna - Kontrastné pozadie pre lepšiu viditeľnosť
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xdbe4dd);
+      scene.fog = new THREE.FogExp2(0xdbe4dd, 0.03);
+
+      // 2. Kamera
+      camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 1.5, 7);
+
+      // 3. Renderer
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+      // 4. Pokročilé osvetlenie pre kovový a plastový lesk
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+      scene.add(ambientLight);
+
+      const mainLight = new THREE.DirectionalLight(0xffffff, 1.2);
+      mainLight.position.set(5, 12, 7);
+      mainLight.castShadow = true;
+      mainLight.shadow.mapSize.width = 2048;
+      mainLight.shadow.mapSize.height = 2048;
+      scene.add(mainLight);
+
+      const fillLight = new THREE.DirectionalLight(0xa7f3d0, 0.6);
+      fillLight.position.set(-6, 3, -4);
+      scene.add(fillLight);
+
+      // 5. Vytvorenie Profesionálneho 3D Recyklačného Koša
+      recycleBinGroup = new THREE.Group();
+
+      // Materiály
+      const bodyMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x146c3a, 
+        roughness: 0.35,
+        metalness: 0.1
+      });
+      const lidMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x0f4a28, 
+        roughness: 0.4,
+        metalness: 0.15
+      });
+      const metalMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x94a3b8, 
+        metalness: 0.85, 
+        roughness: 0.25 
+      });
+      const rubberMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x1e293b, 
+        roughness: 0.8 
+      });
+      const whiteMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+      // Hlavná nádoba (zárezový kónický tvar)
+      const bodyGeo = new THREE.CylinderGeometry(0.85, 0.7, 2.0, 32);
+      const binBody = new THREE.Mesh(bodyGeo, bodyMaterial);
+      binBody.castShadow = true;
+      binBody.receiveShadow = true;
+      recycleBinGroup.add(binBody);
+
+      // Horná spevňujúca obruč
+      const topRimGeo = new THREE.TorusGeometry(0.87, 0.05, 16, 32);
+      const topRim = new THREE.Mesh(topRimGeo, lidMaterial);
+      topRim.rotation.x = Math.PI / 2;
+      topRim.position.y = 1.0;
+      topRim.castShadow = true;
+      recycleBinGroup.add(topRim);
+
+      // Spodná gumená ochranná lišta
+      const bottomRimGeo = new THREE.TorusGeometry(0.72, 0.04, 16, 32);
+      const bottomRim = new THREE.Mesh(bottomRimGeo, rubberMaterial);
+      bottomRim.rotation.x = Math.PI / 2;
+      bottomRim.position.y = -1.0;
+      recycleBinGroup.add(bottomRim);
+
+      // Veko koša (S otvorom a skosením)
+      const lidGroup = new THREE.Group();
+      const lidBaseGeo = new THREE.CylinderGeometry(0.88, 0.88, 0.15, 32);
+      const lidBase = new THREE.Mesh(lidBaseGeo, lidMaterial);
+      lidBase.position.y = 1.1;
+      lidBase.castShadow = true;
+      lidGroup.add(lidBase);
+
+      const lidHandleGeo = new THREE.TorusGeometry(0.18, 0.03, 12, 24, Math.PI);
+      const lidHandle = new THREE.Mesh(lidHandleGeo, metalMaterial);
+      lidHandle.position.set(0, 1.22, 0);
+      lidHandle.rotation.x = -Math.PI / 2;
+      lidGroup.add(lidHandle);
+
+      recycleBinGroup.add(lidGroup);
+
+      // Bočné kovové rukoväte a pánty
+      const handleShape = new THREE.TorusGeometry(0.15, 0.025, 12, 24);
+      const handleL = new THREE.Mesh(handleShape, metalMaterial);
+      handleL.position.set(-0.85, 0.4, 0);
+      handleL.rotation.y = Math.PI / 2;
+      recycleBinGroup.add(handleL);
+
+      const handleR = handleL.clone();
+      handleR.position.x = 0.85;
+      recycleBinGroup.add(handleR);
+
+      // Plastic 3D Recyklačný Symbol na prednej strane
+      const symbolGroup = new THREE.Group();
+      for (let i = 0; i < 3; i++) {
+        const arrowGeo = new THREE.BoxGeometry(0.28, 0.06, 0.02);
+        const arrow = new THREE.Mesh(arrowGeo, whiteMaterial);
+        const angle = (i * Math.PI * 2) / 3;
+        arrow.position.set(Math.cos(angle) * 0.22, Math.sin(angle) * 0.22, 0);
+        arrow.rotation.z = angle + Math.PI / 2;
+        symbolGroup.add(arrow);
+      }
+      symbolGroup.position.set(0, 0.1, 0.84);
+      recycleBinGroup.add(symbolGroup);
+
+      // Umiestnenie koša
+      recycleBinGroup.position.set(1.5, -0.5, 0);
+      recycleBinGroup.rotation.y = -0.4;
+      scene.add(recycleBinGroup);
+
+      // 6. Lietajúce eko častice
+      createNatureParticles();
+
+      // 7. Event Listener pre zmenu veľkosti a scroll
+      window.addEventListener('resize', onWindowResize);
+      window.addEventListener('scroll', onScrollMove);
+    }
+
+    function createNatureParticles() {
+      const count = 180;
+      const geometry = new THREE.BufferGeometry();
+      const positions = new Float32Array(count * 3);
+
+      for (let i = 0; i < count * 3; i += 3) {
+        positions[i] = (Math.random() - 0.5) * 16;
+        positions[i + 1] = (Math.random() - 0.5) * 16;
+        positions[i + 2] = (Math.random() - 0.5) * 16;
+      }
+
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const material = new THREE.PointsMaterial({
+        color: 0x146c3a,
+        size: 0.08,
+        transparent: true,
+        opacity: 0.35
+      });
+
+      natureParticles = new THREE.Points(geometry, material);
+      scene.add(natureParticles);
+    }
+
+    // Rotácia a posun koša pri skrolovaní
+    function onScrollMove() {
+      const scrollY = window.scrollY;
+      const maxScroll = document.body.scrollHeight - window.innerHeight;
+      const progress = Math.min(Math.max(scrollY / (maxScroll || 1), 0), 1);
+
+      recycleBinGroup.rotation.y = -0.4 + progress * Math.PI * 2;
+      
+      if (progress < 0.33) {
+        recycleBinGroup.position.x = 1.5 - progress * 5;
+      } else if (progress < 0.66) {
+        recycleBinGroup.position.x = -0.3 + (progress - 0.33) * 3;
+      } else {
+        recycleBinGroup.position.x = 0.7 - (progress - 0.66) * 1.5;
+      }
+    }
+
+    // Funkcia pre vhadzovanie odpadu do koša
+    window.dropWaste = function(type) {
+      let geo, mat;
+
+      if (type === 'drum') {
+        geo = new THREE.CylinderGeometry(0.18, 0.18, 0.45, 16);
+        mat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.3 });
+      } else if (type === 'canister') {
+        geo = new THREE.BoxGeometry(0.22, 0.32, 0.18);
+        mat = new THREE.MeshStandardMaterial({ color: 0x1e40af, roughness: 0.4 });
+      } else if (type === 'bottle') {
+        geo = new THREE.CylinderGeometry(0.07, 0.07, 0.38, 12);
+        mat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.85 });
+      } else {
+        geo = new THREE.BoxGeometry(0.28, 0.18, 0.28);
+        mat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.6 });
+      }
+
+      const wasteMesh = new THREE.Mesh(geo, mat);
+      wasteMesh.castShadow = true;
+
+      wasteMesh.position.set(
+        recycleBinGroup.position.x + (Math.random() - 0.5) * 0.2,
+        recycleBinGroup.position.y + 3.0,
+        recycleBinGroup.position.z + (Math.random() - 0.5) * 0.2
+      );
+
+      scene.add(wasteMesh);
+      fallingObjects.push({ 
+        mesh: wasteMesh, 
+        speed: 0.07 + Math.random() * 0.03,
+        rotSpeed: (Math.random() - 0.5) * 0.1
+      });
+
+      recycledCounter++;
+      const counterEl = document.getElementById('recycledCount');
+      if (counterEl) counterEl.innerText = recycledCounter.toLocaleString('sk-SK');
+
+      showToast("Odpad bol úspešne vhodený do recyklačného koša!");
+    };
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.innerText = message;
+      toast.classList.add('active');
+      setTimeout(() => {
+        toast.classList.remove('active');
+      }, 2500);
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      natureParticles.rotation.y += 0.0006;
+
+      for (let i = fallingObjects.length - 1; i >= 0; i--) {
+        const item = fallingObjects[i];
+        item.mesh.position.y -= item.speed;
+        item.mesh.rotation.x += item.rotSpeed;
+        item.mesh.rotation.y += item.rotSpeed;
+
+        if (item.mesh.position.y <= recycleBinGroup.position.y + 0.8) {
+          scene.remove(item.mesh);
+          item.mesh.geometry.dispose();
+          item.mesh.material.dispose();
+          fallingObjects.splice(i, 1);
+        }
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    // Scroll reveal animácie
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+    init();
+    animate();
+  </script>
+</body>
+</html>
